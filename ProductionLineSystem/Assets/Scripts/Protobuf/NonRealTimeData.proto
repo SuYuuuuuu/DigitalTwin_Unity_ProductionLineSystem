@@ -1,0 +1,22 @@
+﻿syntax = "proto3";
+
+
+
+
+message DobotNonRealTimeData{
+
+
+
+	optional string name = 1;
+	optional int32 id = 2;
+	repeated float homeParams =3;
+	repeated float endEffectorParams = 4;
+	repeated float jogJoint_VelocityWithAcceleration = 5;
+	repeated float jogCoordinate_VelocityWithAcceleration = 6;
+	repeated float jogCommon_VelocityRatioWithAcceleration = 7;
+	repeated float ptpJoint_VelocityWithAcceleration = 8;
+	repeated float ptpCoordinate_VelocityWithAcceleration = 9;
+	repeated float ptpCommon_VelocityRatioWithAcceleration = 10;
+	optional string dateTime = 11;
+
+}
