@@ -48,7 +48,7 @@ namespace LabProductLine.UIModule
         {
             UIManager.Instance.GetWindow<ControlPagePanel>().SetVisible(true);
             UIManager.Instance.GetWindow<ControlPagePanel>().RegisterControlPanelOpened();//注册事件
-            UIManager.Instance.GetWindow<ControlPagePanel>().RegisterRobotPanelShowed();//注册事件
+            //UIManager.Instance.GetWindow<ControlPagePanel>().UpdateRobotControlPanel();//更新面板内容
         }
 
         private void OnEquipmentPageClick(PointerEventData eventData)

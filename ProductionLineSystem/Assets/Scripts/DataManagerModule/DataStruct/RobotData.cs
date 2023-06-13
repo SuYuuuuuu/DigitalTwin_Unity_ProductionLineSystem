@@ -32,16 +32,16 @@ namespace LabProductLine.DataManagerModule
         public event Action<int, RobotOperationStatus> RobotOperationStatusDataChanged;
 
 
-        public int robotID;//机械臂唯一ID ,这里修改了访问属性是为了在Inspector面板序列化出来，用于手动填写Id
+        //private int ID;//机械臂唯一ID ,这里修改了访问属性是为了在Inspector面板序列化出来，用于手动填写Id
         public int RobotID
         {
-            get => robotID;
+            get => ID;
             set
             {
-                if (value != robotID)
+                if (value != ID)
                 {
-                    robotID = value;
-                    UnityMainThreadDispatcher.Instance.Enqueue(() => IdDataChanged?.Invoke(robotID, value));
+                    ID = value;
+                    UnityMainThreadDispatcher.Instance.Enqueue(() => IdDataChanged?.Invoke(ID, value));
                     //JointAnglesDataChanged?.Invoke(robotID,value);
                 }
             }
@@ -55,7 +55,7 @@ namespace LabProductLine.DataManagerModule
                 if (value != robotName)
                 {
                     robotName = value;
-                    UnityMainThreadDispatcher.Instance.Enqueue(() => NameDataChanged?.Invoke(robotID, value));
+                    UnityMainThreadDispatcher.Instance.Enqueue(() => NameDataChanged?.Invoke(ID, value));
                     //JointAnglesDataChanged?.Invoke(robotID,value);
                 }
             }
@@ -73,7 +73,7 @@ namespace LabProductLine.DataManagerModule
                 if (homeParams == null || !value.SequenceEqual(homeParams))
                 {
                     homeParams = value;
-                    UnityMainThreadDispatcher.Instance.Enqueue(() => HomeParamsDataChanged?.Invoke(robotID, value));
+                    UnityMainThreadDispatcher.Instance.Enqueue(() => HomeParamsDataChanged?.Invoke(ID, value));
                     //JointAnglesDataChanged?.Invoke(robotID,value);
                 }
             }
@@ -88,7 +88,7 @@ namespace LabProductLine.DataManagerModule
                 if (endEffectorSuctionCup == null || !value.SequenceEqual(endEffectorSuctionCup))
                 {
                     endEffectorSuctionCup = value;
-                    UnityMainThreadDispatcher.Instance.Enqueue(() => EndEffectorSuctionCupDataChanged?.Invoke(robotID, value));
+                    UnityMainThreadDispatcher.Instance.Enqueue(() => EndEffectorSuctionCupDataChanged?.Invoke(ID, value));
                     //JointAnglesDataChanged?.Invoke(robotID,value);
                 }
             }
@@ -103,7 +103,7 @@ namespace LabProductLine.DataManagerModule
                 if (jointAngles == null || !value.SequenceEqual(jointAngles))
                 {
                     jointAngles = value;
-                    UnityMainThreadDispatcher.Instance.Enqueue(() => JointAnglesDataChanged?.Invoke(robotID, value));
+                    UnityMainThreadDispatcher.Instance.Enqueue(() => JointAnglesDataChanged?.Invoke(ID, value));
                     //JointAnglesDataChanged?.Invoke(robotID,value);
                 }
             }
@@ -118,7 +118,7 @@ namespace LabProductLine.DataManagerModule
                 if (endEffectorPos == null || !value.SequenceEqual(endEffectorPos))
                 {
                     endEffectorPos = value;
-                    UnityMainThreadDispatcher.Instance.Enqueue(() => EndEffectorPosDataChanged?.Invoke(robotID, value));
+                    UnityMainThreadDispatcher.Instance.Enqueue(() => EndEffectorPosDataChanged?.Invoke(ID, value));
                 }
             }
         }
@@ -132,7 +132,7 @@ namespace LabProductLine.DataManagerModule
                 if (jogJointParams == null || !value.SequenceEqual(jogJointParams))
                 {
                     jogJointParams = value;
-                    UnityMainThreadDispatcher.Instance.Enqueue(() => JogJointParamsDataChanged?.Invoke(robotID, value));
+                    UnityMainThreadDispatcher.Instance.Enqueue(() => JogJointParamsDataChanged?.Invoke(ID, value));
                 }
             }
         }
@@ -146,7 +146,7 @@ namespace LabProductLine.DataManagerModule
                 if (jogCoordinateParams == null || !value.SequenceEqual(jogCoordinateParams))
                 {
                     jogCoordinateParams = value;
-                    UnityMainThreadDispatcher.Instance.Enqueue(() => JogCoordinateDataChanged?.Invoke(robotID, value));
+                    UnityMainThreadDispatcher.Instance.Enqueue(() => JogCoordinateDataChanged?.Invoke(ID, value));
                 }
             }
         }
@@ -160,7 +160,7 @@ namespace LabProductLine.DataManagerModule
                 if (jogCommonParams == null || !value.SequenceEqual(jogCommonParams))
                 {
                     jogCommonParams = value;
-                    UnityMainThreadDispatcher.Instance.Enqueue(() => JogCommonDataChanged?.Invoke(robotID, value));
+                    UnityMainThreadDispatcher.Instance.Enqueue(() => JogCommonDataChanged?.Invoke(ID, value));
                 }
             }
         }
@@ -174,7 +174,7 @@ namespace LabProductLine.DataManagerModule
                 if (ptpJointParams == null || !value.SequenceEqual(ptpJointParams))
                 {
                     ptpJointParams = value;
-                    UnityMainThreadDispatcher.Instance.Enqueue(() => PTPJointParamsDataChanged?.Invoke(robotID, value));
+                    UnityMainThreadDispatcher.Instance.Enqueue(() => PTPJointParamsDataChanged?.Invoke(ID, value));
                 }
             }
         }
@@ -188,7 +188,7 @@ namespace LabProductLine.DataManagerModule
                 if (ptpCoordinateParams == null || !value.SequenceEqual(ptpCoordinateParams))
                 {
                     ptpCoordinateParams = value;
-                    UnityMainThreadDispatcher.Instance.Enqueue(() => PTPCoordinateParamsDataChanged?.Invoke(robotID, value));
+                    UnityMainThreadDispatcher.Instance.Enqueue(() => PTPCoordinateParamsDataChanged?.Invoke(ID, value));
                 }
             }
         }
@@ -202,7 +202,7 @@ namespace LabProductLine.DataManagerModule
                 if (ptpJumpParams == null || !value.SequenceEqual(ptpJumpParams))
                 {
                     ptpJumpParams = value;
-                    UnityMainThreadDispatcher.Instance.Enqueue(() => PTPJumpParamsDataChanged?.Invoke(robotID, value));
+                    UnityMainThreadDispatcher.Instance.Enqueue(() => PTPJumpParamsDataChanged?.Invoke(ID, value));
                 }
             }
         }
@@ -216,7 +216,7 @@ namespace LabProductLine.DataManagerModule
                 if (ptpJump2Params == null || !value.SequenceEqual(ptpJump2Params))
                 {
                     ptpJump2Params = value;
-                    UnityMainThreadDispatcher.Instance.Enqueue(() => PTPJump2ParamsDataChanged?.Invoke(robotID, value));
+                    UnityMainThreadDispatcher.Instance.Enqueue(() => PTPJump2ParamsDataChanged?.Invoke(ID, value));
                 }
             }
         }
@@ -230,7 +230,7 @@ namespace LabProductLine.DataManagerModule
                 if (ptpCommonParams == null || !value.SequenceEqual(ptpCommonParams))
                 {
                     ptpCommonParams = value;
-                    UnityMainThreadDispatcher.Instance.Enqueue(() => PTPCommonParamsDataChanged?.Invoke(robotID, value));
+                    UnityMainThreadDispatcher.Instance.Enqueue(() => PTPCommonParamsDataChanged?.Invoke(ID, value));
                 }
             }
         }
@@ -244,7 +244,7 @@ namespace LabProductLine.DataManagerModule
                 if (value != operationStatus)
                 {
                     operationStatus = value;
-                    UnityMainThreadDispatcher.Instance.Enqueue(() => RobotOperationStatusDataChanged?.Invoke(robotID, value));
+                    UnityMainThreadDispatcher.Instance.Enqueue(() => RobotOperationStatusDataChanged?.Invoke(ID, value));
                 }
             }
         }
@@ -259,7 +259,7 @@ namespace LabProductLine.DataManagerModule
                 if (value != temperature)
                 {
                     temperature = value;
-                    UnityMainThreadDispatcher.Instance.Enqueue(() => TemperatureDataChanged?.Invoke(robotID, value));
+                    UnityMainThreadDispatcher.Instance.Enqueue(() => TemperatureDataChanged?.Invoke(ID, value));
                 }
             }
         }
@@ -273,7 +273,7 @@ namespace LabProductLine.DataManagerModule
                 if (value != vibrationalFrequency)
                 {
                     vibrationalFrequency = value;
-                    UnityMainThreadDispatcher.Instance.Enqueue(() => VibrationalFrequencyDataChanged?.Invoke(robotID, value));
+                    UnityMainThreadDispatcher.Instance.Enqueue(() => VibrationalFrequencyDataChanged?.Invoke(ID, value));
                 }
             }
         }

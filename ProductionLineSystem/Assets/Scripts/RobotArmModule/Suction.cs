@@ -24,7 +24,7 @@ namespace LabProductLine.RobotArmModule
 
         private void OnTriggerStay(Collider other)
         {
-            if (ToolDataManager.Instance.GetRobotDataByID(index).EndEffectorSuctionCup[1] && other.gameObject.CompareTag("grappable"))
+            if (DataManager.Instance.GetDataById<RobotData>(index).EndEffectorSuctionCup[1] && other.gameObject.CompareTag("grappable"))
             {
                 myRigidbody = other.attachedRigidbody;
                 other.isTrigger = true;
@@ -39,7 +39,7 @@ namespace LabProductLine.RobotArmModule
                     fixedJoint.breakTorque = breakTorque;
                 }
             }
-            else if (!ToolDataManager.Instance.GetRobotDataByID(index).EndEffectorSuctionCup[1] && other.gameObject.CompareTag("grappable"))
+            else if (!DataManager.Instance.GetDataById<RobotData>(index).EndEffectorSuctionCup[1] && other.gameObject.CompareTag("grappable"))
             {
                 if (gameObject.TryGetComponent<FixedJoint>(out fixedJoint))
                     Destroy(fixedJoint);

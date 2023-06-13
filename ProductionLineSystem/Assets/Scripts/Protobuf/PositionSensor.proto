@@ -1,0 +1,9 @@
+syntax = "proto3";
+
+
+message PositionSensor_Data
+{
+    optional int32 id = 1;
+    optional bool isActived = 2;
+    optional string dataTime = 3;
+}

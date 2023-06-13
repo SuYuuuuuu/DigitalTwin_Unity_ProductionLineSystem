@@ -11,11 +11,11 @@ namespace LabProductLine.UIModule
     public class ControlPanel : UIWindow
     {
         public Slider[] sliders;
-        public RobotOperationStatus state; //µ±Ç°Ãæ°å»úĞµ±ÛµÄÁ¬½Ó×´Ì¬
+        public RobotOperationStatus state; //æœºæ¢°è‡‚æ“ä½œçŠ¶æ€
         protected override void Start()
         {
             base.Start();
-            UIManager.Instance.GetWindow<ControlPagePanel>().onControlPanelOpen += ControlPanel_onControlPanelOpen;//×¢²áÊÂ¼ş£¬ÓÃÓÚ´«µİµ±Ç°»úĞµ±ÛÏûÏ¢
+            UIManager.Instance.GetWindow<ControlPagePanel>().onControlPanelOpen += ControlPanel_onControlPanelOpen;//è®¢é˜…äº‹ä»¶é¢æ¿æ‰“å¼€äº‹ä»¶
             GetUIEventListener("CloseBtn").PointClickHandler += OnControlPanelClosed;
             foreach (Slider item in sliders)
             {
@@ -26,7 +26,7 @@ namespace LabProductLine.UIModule
 
         private void ControlPanel_onControlPanelOpen(PointerEventData obj)
         {
-            
+                //å®ç°å¯¹åº”ä¿¡æ¯æ˜¾ç¤º
         }
 
         private void OnSlidersValueChanged(float value, Slider item, TMP_Text text)
@@ -34,13 +34,13 @@ namespace LabProductLine.UIModule
             switch (item.name)
             {
                 case "JogJointParams":
-                    text.text = string.Format("{0}¡ã/s", value);
+                    text.text = string.Format("{0}Â°/s", value);
                     break;
                 case "JogCooParams":
-                    text.text = string.Format("{0}¡ã/s", value);
+                    text.text = string.Format("{0}Â°/s", value);
                     break;
                 case "JogCommonParams":
-                    text.text = string.Format("{0}¡ã/s", value);
+                    text.text = string.Format("{0}Â°/s", value);
                     break;
                 case "PTPJointParams":
                     text.text = string.Format("{0}%", value);
@@ -60,7 +60,7 @@ namespace LabProductLine.UIModule
         }
 
         /// <summary>
-        /// ·¢ËÍÏûÏ¢µ½»úĞµ±ÛÉÏÎ»¶ËÉèÖÃĞÂ²ÎÊı
+        /// çŠ¶æ€æ”¹å˜é€šçŸ¥æœåŠ¡ç«¯
         /// </summary>
         private void ChangeParamsToServer()
         {

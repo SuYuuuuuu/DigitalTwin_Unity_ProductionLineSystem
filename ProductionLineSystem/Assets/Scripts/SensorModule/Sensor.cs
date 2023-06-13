@@ -12,11 +12,11 @@ namespace LabProductLine.SensorModule
     {
         [SerializeField]
         private int index;
-        private Vector3 infraredDefaultRayStart;//��ʼ�������λ��
-        private Vector3 infraredDefaultRayEnd;//��ʼ�����յ�λ��
-        private Vector3 infraredCurrentRayEnd;//��ǰ�����յ�λ��
-        private Vector3 direction;//���߷���
-        private GameObject infraredRay;//����ʵ��
+        private Vector3 infraredDefaultRayStart;//射线默认起始位置
+        private Vector3 infraredDefaultRayEnd;//射线默认末端位置
+        private Vector3 infraredCurrentRayEnd;//射线当前末端位置
+        private Vector3 direction;//射线方向
+        private GameObject infraredRay;//射线实例
         public Material material;
 
         private PositionSensorData sensorData;
@@ -26,7 +26,7 @@ namespace LabProductLine.SensorModule
             {
                 if (sensorData == null)
                 {
-                    sensorData = ToolDataManager.Instance.GetPositionSensorDataByID(index);
+                    sensorData = DataManager.Instance.GetDataById<PositionSensorData>(index);
                 }
                 return sensorData;
             }
@@ -34,7 +34,7 @@ namespace LabProductLine.SensorModule
 
         private void Start()
         {
-            infraredDefaultRayStart = transform.position;//��ȡĬ�������ά����
+            infraredDefaultRayStart = transform.position;//当前位置
             //infraredDefaultRayEnd = new Vector3(transform.position.x, transform.position.y, transform.position.z + transform.forward.z * 1.1f);//�˴���z�������Ҫ����ԭ����λ�õ�z�ᣬ����᲻����
             infraredDefaultRayEnd = new Vector3(transform.position.x + transform.right.x * 1.3f, transform.position.y, transform.position.z);
             infraredCurrentRayEnd = infraredDefaultRayEnd;
@@ -43,7 +43,7 @@ namespace LabProductLine.SensorModule
             infraredRay = DrawLine(infraredDefaultRayStart, infraredDefaultRayEnd);
         }
 
-        public GameObject DrawLine(Vector3 start, Vector3 end)//����Debug.DrawLine����Ҳ�������ڴ������ߵĿ��ӻ�����
+        public GameObject DrawLine(Vector3 start, Vector3 end)//
         {
             GameObject line = new GameObject();
 
@@ -53,7 +53,7 @@ namespace LabProductLine.SensorModule
             lineRenderer.material = material;
             lineRenderer.name = "InfraredRay";
             //lineRenderer.material.color = new Color(255, 0, 0, 47);
-            //�˴�Ҫ�޸���ɫ��͸���Ⱦ�Ҫ�õ�����һ���ٷ��Ľű�
+            //
 
             //Set width
             lineRenderer.startWidth = 0.014f;
@@ -71,7 +71,7 @@ namespace LabProductLine.SensorModule
         }
 
         /// <summary>
-        /// Unityģʽ�µ����߼�������״̬д��
+        ///
         /// </summary>
         private void InfraredRay_Virtual()
         {
@@ -98,7 +98,7 @@ namespace LabProductLine.SensorModule
         }
 
         /// <summary>
-        /// PLCģʽ�µ����߼�������״̬��ȡ
+        ///
         /// </summary>
         private void InfraredRay_Entity()
         {

@@ -271,5 +271,7 @@ namespace LabProductLine.DataManagerModule
         {
             return conveyorDic.Keys.Count;
         }
+
+
     }
 }

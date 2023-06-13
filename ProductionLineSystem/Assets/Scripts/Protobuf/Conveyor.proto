@@ -1,0 +1,9 @@
+syntax = "proto3";
+
+message Conveyor_Data
+{
+    optional int32 id = 1;
+    optional bool isOpened = 2;
+    optional float speed = 3;
+    optional string dataTime =4;
+}

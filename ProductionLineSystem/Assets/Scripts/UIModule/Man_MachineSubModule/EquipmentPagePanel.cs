@@ -1,5 +1,7 @@
 using Common;
+using LabProductLine.ControlModule;
 using LabProductLine.DataManagerModule;
+using System;
 using System.Collections.Generic;
 using TMPro;
 using UGUI.Framework;
@@ -15,11 +17,15 @@ namespace LabProductLine.UIModule
         public RectTransform content;//这个为显示的内容区域
         public Transform[] Pages;//存储内容页
         public RobotInfo robotInfo;//自定义数据类型，包含大部分信息，可在面板手动配置
+        public int robotData_Num=5;
         private Dictionary<GameObject, int> robotDic; //存储每个内容对应的机械臂序号，方便查找信息
+        private List<int> existingRobot; //存储添加的机械臂ID
         private GameObject robotPagePrefab;
         private Button NextBtn;
         private Button LastBtn;
         private GameObject curRobotObj;
+        private List<GameObject> usedObjs;//已经使用的面板
+        private List<GameObject> unusedObjs;//未使用的面板
         private List<RobotData> registeredRobotDataList;
         private int curPageIndex = 0;//当前页码
 
@@ -29,42 +35,72 @@ namespace LabProductLine.UIModule
         {
             base.Start();
             robotDic = new Dictionary<GameObject, int>();
+            usedObjs = new List<GameObject>();
+            unusedObjs =  new List<GameObject>();
+            existingRobot = new List<int>();
             registeredRobotDataList = new List<RobotData>();
             robotPagePrefab = ResourceManager.Load<GameObject>("RobotEx");//加载预制件
-            for (int i = 0; i < ToolDataManager.Instance.GetRobotDataNumber(); i++)
+            Client.Instance.RobotConnected += OnRobotConnected;
+            for (int i = 0; i < robotData_Num; i++)
             {
                 GameObject go = Instantiate(robotPagePrefab);
                 go.transform.SetParent(content);//实例化预制件并设置其父物体
                 go.GetComponent<UIEventListener>().PointClickHandler += OnRobotInfoPagePanelOpened;//这里没有取消订阅
-                robotDic.Add(go, i);//因为机械臂序号是从0开始按顺序排列，所以可以直接添加
+                unusedObjs.Add(go);
                 //这里应该要动态修改content的高度保证容纳所有子物体
             }
             GetUIEventListener("NextBtn").PointClickHandler += OnNextPageOpened;
             GetUIEventListener("LastBtn").PointClickHandler += OnLastPageOpened;
             GetUIEventListener("CloseBtn").PointClickHandler += OnEquipmentPagePanelClosed;
+            GetUIEventListener("RefreshBtn").PointClickHandler += OnEquipmentPagePanelRefreshed;
 
             NextBtn = GetUIEventListener("NextBtn").GetComponent<Button>();
             LastBtn = GetUIEventListener("LastBtn").GetComponent<Button>();
             UpdateBtnState();
         }
 
-
-        //private void OnParamsPanelOpened(PointerEventData eventData)
-        //{
-        //    UIManager.Instance.GetWindow<ParamsPanel>().SetVisible(true);
-        //}
-
-        public void OnEquipmentPagePanelOpened()
+        //当机器连接后触发的事件
+        private void OnRobotConnected(int ID)
         {
-            if (UIManager.Instance.openingUIWindows.Contains(this)) return;
+            if(existingRobot.Contains(ID)) return;
+            //在未使用的面板中挑选一个，若没有则创建一个
+            if(unusedObjs.Count==0)
+            {
+                GameObject go = Instantiate(robotPagePrefab);
+                go.transform.SetParent(content);//实例化预制件并设置其父物体
+                go.GetComponent<UIEventListener>().PointClickHandler += OnRobotInfoPagePanelOpened;//这里没有取消订阅
+                robotDic.Add(go,ID);
+                existingRobot.Add(ID);
+            }
+            else
+            {
+                robotDic.Add(unusedObjs[0],ID);//取第一个出来
+                usedObjs.Add(unusedObjs[0]);//添加面板
+                unusedObjs.RemoveAt(0);//将第一个元素移除
+                existingRobot.Add(ID);
+            }
+        }
+
+
+
+        ///刷新当前的左侧面板信息
+        private void OnEquipmentPagePanelRefreshed(PointerEventData eventData)
+        {
             foreach (GameObject key in robotDic.Keys)
             {
-                RobotData data = ToolDataManager.Instance.GetRobotDataByID(robotDic[key]);
-                if (data.OperationStatus == RobotOperationStatus.waiting) continue; //直接跳过未连接的机械臂
+                RobotData data = DataManager.Instance.GetDataById<RobotData>(robotDic[key]);
+                if (data==null || data.OperationStatus == RobotOperationStatus.waiting) continue; //直接跳过未连接的机械臂
                 key.transform.Find("Name").GetComponent<TMP_Text>().text = data.RobotName;
                 key.transform.Find("WorkState").GetComponent<TMP_Text>().text = data.OperationStatus == RobotOperationStatus.working ? "工作中" : "已断开";
                 key.transform.Find("WorkHour").GetComponent<TMP_Text>().text = string.Format("{0:00}:{1:00}", Mathf.FloorToInt(Time.time / 60f), Mathf.FloorToInt(Time.time % 60f));
             }
+        }
+
+
+        public void OnEquipmentPagePanelOpened()
+        {
+            if (UIManager.Instance.openingUIWindows.Contains(this)) return;
+            OnEquipmentPagePanelRefreshed(null);
             // RegisterParamsBtn();//注册一波按钮事件
             UIManager.Instance.GetWindow<RobotInfoPanel>().SetVisible(false);//打开时要把信息面板隐藏
             UIManager.Instance.openingUIWindows.Add(this);//将当前面板加入到开启队列中
@@ -90,13 +126,13 @@ namespace LabProductLine.UIModule
             GameObject obj = eventData.pointerClick;
             UIManager.Instance.GetWindow<RobotInfoPanel>().SetVisible(true);
             if (!robotDic.ContainsKey(obj) || curRobotObj == obj) return;
-            RobotData data = ToolDataManager.Instance.GetRobotDataByID(robotDic[obj]);
+            RobotData data = DataManager.Instance.GetDataById<RobotData>(robotDic[obj]);
             UpdateRobotInfo(data);//更新机械臂数据
             RegisterRobotDataEvent(data);
             registeredRobotDataList.Add(data);
             if (curRobotObj != null)
             {
-                RobotData lastData = ToolDataManager.Instance.GetRobotDataByID(robotDic[curRobotObj]);
+                RobotData lastData = DataManager.Instance.GetDataById<RobotData>(robotDic[curRobotObj]);
                 UnregisterRobotDataEvent(lastData);//注销上一个机械臂事件
                 registeredRobotDataList.Remove(lastData);//从已注册列表中移除
             }

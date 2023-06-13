@@ -21,19 +21,13 @@ namespace LabProductLine.ControlModule
         }
 
         private byte[] buffers;
-        private List<byte> bufferList = new List<byte>(1024);
+        private List<byte> bufferList;
         private Socket socket;
         public Socket Socket { get => socket; private set { } }
-        //private List<Timer> timerList = new List<Timer>();
-        public Client()
-        {
-            // for (int i = 0; i < 5; i++)
-            // {
-            //     Timer timer = new Timer(10000);
-            //     timer.Elapsed += Timer_Elapsed;
-            //     timerList.Add(timer);
-            // }
-        }
+
+        public Dictionary<int,RobotOperationStatus> robot2LastState_Dic;
+        public event Action<int> RobotConnected;
+
 
         private bool[] msgBool_Input;
         public bool[] MsgBool_Input { get => msgBool_Input; private set { } }//传输过来的IO信号存储
@@ -42,6 +36,12 @@ namespace LabProductLine.ControlModule
 
         public uint[] MsgUint { get; set; }//传输过来的Uint值，譬如装配体数量
 
+
+        public Client()
+        {
+            bufferList = new List<byte>(1024);
+            robot2LastState_Dic = new Dictionary<int, RobotOperationStatus>();
+        }
 
         /*-----------------接收数据----------------------*/
 
@@ -86,7 +86,6 @@ namespace LabProductLine.ControlModule
 
             try
             {
-                //ProcessData(client);
                 ProcessProtobufData(client, receiveLen);
                 ReceiveData(client);
             }
@@ -119,7 +118,15 @@ namespace LabProductLine.ControlModule
                 if (dataType == 0)//实时数据
                 {
                     DobotRealTimeData data = DataHelper.DeserializeRealTimeData(bufferList.ToArray()[2..(2 + packageLen)]);
-                    RobotData robotdata = ToolDataManager.Instance.GetRobotDataByID(data.Id);
+                     if(!robot2LastState_Dic.ContainsKey(data.Id))//这里涉及到代码顺序问题，应该是先被触发后订阅UI更新事件，再进行赋值
+                    {
+                        robot2LastState_Dic.Add(data.Id,RobotOperationStatus.waiting);//默认为断开
+                    }
+                    //如果之前的状态为断开，当前的状态为连接，则触发事件
+                    if(robot2LastState_Dic[data.Id]==RobotOperationStatus.waiting && data.LiveState == DobotConnectState.Connected)
+                        UnityMainThreadDispatcher.Instance.Enqueue(() => RobotConnected?.Invoke(data.Id));
+                    RobotData robotdata  = DataManager.Instance.GetDataById<RobotData>(data.Id);
+                    if(robotdata==null) robotdata = DataManager.Instance.AddData<RobotData>(data.Id,new RobotData()); //若不存在则创建
                     robotdata.EndEffectorPos = data.Pose?.ToArray()[0..4];
                     robotdata.JointAngles = data.Pose?.ToArray()[4..8];
                     robotdata.OperationStatus = data.LiveState == DobotConnectState.Connected ? RobotOperationStatus.working : RobotOperationStatus.waiting;
@@ -129,7 +136,8 @@ namespace LabProductLine.ControlModule
                 else if (dataType == 1)//非实时数据
                 {
                     DobotNonRealTimeData data = DataHelper.DeserializeNonRealTimeData(bufferList.ToArray()[2..(2 + packageLen)]);
-                    RobotData robotdata = ToolDataManager.Instance.GetRobotDataByID(data.Id);
+                    RobotData robotdata  = DataManager.Instance.GetDataById<RobotData>(data.Id);
+                    if(robotdata==null) robotdata = DataManager.Instance.AddData<RobotData>(data.Id,new RobotData()); //若不存在则创建
                     robotdata.RobotName = data.Name;
                     robotdata.HomeParams = data.HomeParams?.ToArray();
                     robotdata.JogJointParams = data.JogJointVelocityWithAcceleration?.ToArray();
@@ -139,27 +147,28 @@ namespace LabProductLine.ControlModule
                     robotdata.PTPCoordinateParams = data.PtpCoordinateVelocityWithAcceleration?.ToArray();
                     robotdata.PTPCommonParams = data.PtpCommonVelocityRatioWithAcceleration?.ToArray();
                 }
-                else if (dataType == 2) //输入信号
+                else if(dataType==2) //传送带数据
                 {
-                    InputSignal data = DataHelper.DeserializeInputSignal(bufferList.ToArray()[2..(2 + packageLen)]);
-
-                    for (int i = 0; i < ToolDataManager.Instance.GetPositionSensorNumber(); i++)
-                    {
-                        ToolDataManager.Instance.GetPositionSensorDataByID(i).detectStatus = data.InputSignal_[i + 3]; //这里加3是因为PLC中的输入传感器位置信号是从第四个开始计算
-                    }
+                    Conveyor_Data data =  DataHelper.DeserializeConveyorData(bufferList.ToArray()[2..(2 + packageLen)]);
+                    ConveyorData conveyorData  = DataManager.Instance.GetDataById<ConveyorData>(data.Id);
+                    if(conveyorData==null) conveyorData = DataManager.Instance.AddData<ConveyorData>(data.Id,new ConveyorData()); //若不存在则创建
+                    conveyorData.operationStatus = data.IsOpened? ConveyorOperationStatus.open:ConveyorOperationStatus.close;
                 }
-                else if (dataType == 3)
+                else if(dataType==3)//气缸数据
                 {
-                    OutputSignal data = DataHelper.DeserializeOutputSignal(bufferList.ToArray()[2..(2 + packageLen)]);
-                    for (int i = 0; i < ToolDataManager.Instance.GetCylinderNumber(); i++)
-                    {
-                        //从第二位开始到第六位为气缸
-                        ToolDataManager.Instance.GetCylinderDataByID(i).operationStatus = data.OutputSignal_[i + 1] ? CylinderOperationStatus.open : CylinderOperationStatus.close;
-                    }
-                    ToolDataManager.Instance.GetConveyorDataByID(0).operationStatus = data.OutputSignal_[8] ? ConveyorOperationStatus.open : ConveyorOperationStatus.close;
-                    Debug.Log(ToolDataManager.Instance.GetConveyorDataByID(0).operationStatus);
+                    Cylinder_Data data =  DataHelper.DeserializeCylinderData(bufferList.ToArray()[2..(2 + packageLen)]);
+                    CylinderData cylinderData  = DataManager.Instance.GetDataById<CylinderData>(data.Id);
+                    if(cylinderData==null) cylinderData = DataManager.Instance.AddData<CylinderData>(data.Id,new CylinderData()); //若不存在则创建
+                    cylinderData.operationStatus = data.IsOpened?CylinderOperationStatus.open:CylinderOperationStatus.close;
                 }
-
+                else if(dataType==4)//传感器数据--位置数据
+                {
+                    PositionSensor_Data data =  DataHelper.DeserializePositionSensorData(bufferList.ToArray()[2..(2 + packageLen)]);
+                    PositionSensorData sensorData  = DataManager.Instance.GetDataById<PositionSensorData>(data.Id);
+                    if(sensorData==null) sensorData = DataManager.Instance.AddData<PositionSensorData>(data.Id,new PositionSensorData()); //若不存在则创建
+                    sensorData.detectStatus = data.IsActived;
+                    Debug.Log("传感器ID为：" + sensorData.ID.ToString() + sensorData.detectStatus);
+                }
                 // long clientDateTime = long.Parse(data.DateTime);
                 // double timeSpan = (DateTime.Now.Ticks - clientDateTime) / (double)TimeSpan.TicksPerMillisecond;
                 // Debug.Log("当前时间为：" +DateTime.Now.Ticks + "发送时间为："+ clientDateTime + "时间差为:" +   timeSpan + "ms");
@@ -169,178 +178,6 @@ namespace LabProductLine.ControlModule
 
         }
 
-        /*  ----------------之前根据自定义数据协议处理数据的函数
-                private void ProcessData(Socket client)
-                {
-                    if (client == null || !client.Connected)
-                        return;
-                    byte[] receivedBytes;
-                    while (bufferList.Count > 4)
-                    {
-                        if (bufferList[0] == 0xAA)//包头字节
-                        {
-                            int len = bufferList[2];
-                            if (bufferList.Count < len + 4) //数据区尚未接收完整
-                            {
-                                break;
-                            }
-                            receivedBytes = new byte[len + 4];
-                            //得到完整的数据，复制到ReceiveBytes中进行校验
-                            bufferList.CopyTo(0, receivedBytes, 0, len + 4);
-                            byte checkSum = GetByteOfPayloadCheckSum_Receive(receivedBytes[3..(receivedBytes.Length - 1)]);
-                            if ((checkSum + receivedBytes[receivedBytes.Length - 1]) % 256 == 0)
-                            {
-                                DataProcess(receivedBytes);
-                                bufferList.RemoveRange(0, len + 4);
-                            }
-                            else
-                            {
-                                bufferList.RemoveRange(0, len + 4);
-                                Debug.Log("数据校验不正确");
-                                continue;
-                            }
-                        }
-                        else//帧头不正确
-                        {
-                            bufferList.RemoveAt(0);
-                            //Debug.Log("帧头不正确");
-                        }
-                    }
-                }
-                private void DataProcess(byte[] receivedBytes)
-                {
-                    byte dataType = receivedBytes[1];//数据头，代表了哪种数据类型
-                    int len = receivedBytes[2];//负载长度
-                    if (len == 0) return;//负载中没有数据
-                    switch (dataType)
-                    {
-                        case 0://byte[]-----string
-                            string msgString = Encoding.GetEncoding("GBK").GetString(receivedBytes, 3, len);
-                            Debug.Log(msgString);//测试
-                            break;
-
-                        case 1://byte[]-----uint[]
-                            MsgUint = new uint[len / 4];
-                            for (int i = 3, count = 0; i < len + 3; i += 4, count++)
-                            {
-                                MsgUint[count] = BitConverter.ToUInt32(receivedBytes[i..(i + 4)]);
-                            }
-                            break;
-
-                        case 2://byte[]-----bool[]
-                            byte[] res = new byte[len];
-                            int signalType = receivedBytes[3];//信号类型
-                            Buffer.BlockCopy(receivedBytes, 4, res, 0, len);
-                            switch (signalType)
-                            {
-                                case 1:
-                                    msgBool_Input = Array.ConvertAll(res, value => value == 1 ? true : false);
-                                    UpdateInputStatus(msgBool_Input);//更新输入状态信息
-                                    break;
-                                case 2:
-                                    msgBool_Output = Array.ConvertAll(res, value => value == 1 ? true : false);
-                                    UpdateOutputStatus(msgBool_Output);//更新输出状态信息
-                                    break;
-                                default:
-                                    break;
-                            }
-                            break;
-
-                        case 3://byte[]-----float[]
-                            int dobotType = receivedBytes[3];
-                            switch (dobotType)
-                            {
-                                case 1:
-                                    ChangeByteToFloat(receivedBytes, len, 1);
-                                    //重置计时器
-                                    ChangeRobotRotationStatus(timerList[dobotType - 1]);
-                                    break;
-                                case 2:
-                                    ChangeByteToFloat(receivedBytes, len, 2);
-                                    ChangeRobotRotationStatus(timerList[dobotType - 1]);
-                                    break;
-                                case 3:
-                                    ChangeByteToFloat(receivedBytes, len, 3);
-                                    ChangeRobotRotationStatus(timerList[dobotType - 1]);
-                                    break;
-                                case 4:
-                                    ChangeByteToFloat(receivedBytes, len, 4);
-                                    ChangeRobotRotationStatus(timerList[dobotType - 1]);
-                                    break;
-                                case 5:
-                                    ChangeByteToFloat(receivedBytes, len, 5);
-                                    ChangeRobotRotationStatus(timerList[dobotType - 1]);
-                                    break;
-                                default:
-                                    break;
-                            }
-                            break;
-                        default:
-                            break;
-
-                    }
-
-
-                }
-                private void UpdateInputStatus(bool[] msgBool_Input)
-                {
-                    int posSensor_Count = 8;//位置传感器数量
-                    for (int i = 0; i < posSensor_Count; i++)//有八个位置传感器的信号，都是按照顺序来的
-                    {
-                        ToolDataManager.Instance.UpdatePositionSensorDataByID(i, msgBool_Input[i + 3]);
-                    }
-                    //大机械臂更新运动状态
-                    ToolDataManager.Instance.UpdateRobotDataByID(4, default, default, msgBool_Input[12] ? RobotOperationStatus.working : RobotOperationStatus.waiting);
-                }
-                private void UpdateOutputStatus(bool[] msgBool_Output)
-                {
-                    int cylinder_Count = 5;//气缸数量
-                    for (int i = 0; i < cylinder_Count; i++)
-                    {
-                        //从接收的数组第二位开始到第六位才是气缸
-                        ToolDataManager.Instance.UpdateCylinderDataByID(i, msgBool_Output[i + 1] ? CylinderOperationStatus.open : CylinderOperationStatus.close);
-                    }
-                    ToolDataManager.Instance.UpdateConveyorDataByID(0, msgBool_Output[8] ? ConveyorOperationStatus.open : ConveyorOperationStatus.close);
-                    //这里接收的数组还包含了大机械臂的一些信息，后面再处理****************************************
-                }
-
-
-
-                private void ChangeByteToFloat(byte[] bytes, int len, int robotIndex)
-                {
-                    float[] floats = new float[(len - 1) / 4];
-                    for (int i = 4, count = 0; i < 3 + len; i += 4, count++)
-                    {
-                        floats[count] = BitConverter.ToSingle(bytes[i..(i + 4)]);
-                        // Debug.Log(count.ToString() + "---" + floats[count].ToString());//测试
-                    }
-                    //这里因为传输的数据不一样所以分开来
-                    if (robotIndex == 5)
-                        ToolDataManager.Instance.UpdateRobotDataByID(robotIndex - 1, floats, default, RobotOperationStatus.working);
-                    else
-                        ToolDataManager.Instance.UpdateRobotDataByID(robotIndex - 1, floats[4..8], floats[0..4], RobotOperationStatus.working);
-                    //更新小机械臂关节角度数据,此处可以将末端位置数据传过来
-                }
-                private void ChangeRobotRotationStatus(Timer timer)//改变机械臂的旋转状态
-                {
-                    timer.Reset();//重置计时器
-                }
-
-                private void Timer_Elapsed(object sender, ElapsedEventArgs e)//检测是否没有服务端发送数据，则改变机械臂状态为静止
-                {
-                    Timer timer = sender as Timer;
-                    int robotIndex = timerList.IndexOf(timer) + 1;//需要考虑索引的问题
-                    ToolDataManager.Instance.UpdateRobotDataByID(robotIndex - 1, default, default, RobotOperationStatus.waiting);
-                    timer.Stop();
-                }
-                private void StartAllTimer()//开启所有定时器
-                {
-                    for (int i = 0; i < timerList.Count; i++)
-                    {
-                        timerList[i].Start();
-                    }
-                }
-                */
 
         /*----------------发送数据-------------------------*/
         public void SendData(string msg, Socket client)

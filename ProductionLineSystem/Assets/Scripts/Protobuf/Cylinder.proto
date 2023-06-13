@@ -1,0 +1,8 @@
+syntax = "proto3";
+
+message Cylinder_Data
+{
+    optional int32 id = 1;
+    optional bool isOpened = 2;
+    optional string dataTime = 3;
+}

@@ -9,6 +9,7 @@ namespace LabProductLine.ConveyorModule
         private Rigidbody rdby;
         public float speed;//速度
         public Vector3 direction;
+        public int index;
         private Vector3 pos;
         private ConveyorData conveyorData;
         public ConveyorData ConveyorData
@@ -16,19 +17,19 @@ namespace LabProductLine.ConveyorModule
             get
             {
                 if (conveyorData == null)
-                    conveyorData = ToolDataManager.Instance.GetConveyorDataByID(0);
+                    conveyorData = DataManager.Instance.GetDataById<ConveyorData>(index);
                 return conveyorData;
             }
         }
-        //����ɼ�һ��������ͼ�Ĵ���
+        //
         private void Start()
         {
-            rdby = this.GetComponent<Rigidbody>();
+            rdby = transform.Find("Belt").GetComponent<Rigidbody>();
         }
 
         private void FixedUpdate()
         {
-            if (ConveyorData.operationStatus == ConveyorOperationStatus.close) return;
+            if (ConveyorData?.operationStatus == ConveyorOperationStatus.close) return;
             pos = rdby.position;
             rdby.position += direction * speed * Time.fixedDeltaTime;
             rdby.MovePosition(pos);

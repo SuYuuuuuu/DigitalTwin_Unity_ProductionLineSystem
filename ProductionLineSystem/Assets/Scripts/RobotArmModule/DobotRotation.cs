@@ -27,7 +27,11 @@ namespace LabProductLine.RobotArmModule
             get
             {
                 if (robotData == null)
-                    robotData = ToolDataManager.Instance.GetRobotDataByID(index);
+                {
+                    robotData = DataManager.Instance.GetDataById<RobotData>(index);
+                    if (robotData == null)
+                        return RobotOperationStatus.waiting;
+                }
                 return robotData.OperationStatus;
             }
         }
@@ -74,7 +78,7 @@ namespace LabProductLine.RobotArmModule
 
         private void SelectRobot()//根据索引选择对应的机械臂
         {
-            robotJoint = ToolDataManager.Instance.GetRobotDataByID(index).JointAngles;
+            robotJoint = DataManager.Instance.GetDataById<RobotData>(index).JointAngles;
         }
 
 

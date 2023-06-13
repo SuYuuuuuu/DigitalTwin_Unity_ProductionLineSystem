@@ -6,7 +6,7 @@ namespace LabProductLine.DataManagerModule
     [System.Serializable]
     public class GrapData: BaseData
     {
-        public int ID;
+        //public int ID;
         public int earPhone_grapCount;
 
         public int plug_grapCount;

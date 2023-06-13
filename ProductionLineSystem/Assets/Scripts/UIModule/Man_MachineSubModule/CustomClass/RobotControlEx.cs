@@ -6,7 +6,6 @@ namespace LabProductLine.UIModule
     public class RobotControlEx:MonoBehaviour
     {
         public RobotInfo robotInfo;
-        public RobotData robotData;
 
 
 

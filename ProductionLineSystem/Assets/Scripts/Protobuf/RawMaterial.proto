@@ -1,0 +1,36 @@
+syntax = "proto3";
+
+message EarPhone_Data
+{
+    optional int32 id = 1;
+    repeated float pos = 2;
+    optional string dataTime =4;
+}
+
+message PhoneBox_Data
+{
+    optional int32 id = 1;
+    repeated float pos = 2;
+    optional string dataTime =4;
+}
+
+message Phone_Data
+{
+    optional int32 id = 1;
+    repeated float pos = 2;
+    optional string dataTime =4;
+}
+
+message Plug_Data
+{
+    optional int32 id = 1;
+    repeated float pos = 2;
+    optional string dataTime =4;
+}
+
+message Track_Data
+{
+    optional int32 id = 1;
+    repeated float pos = 2;
+    optional string dataTime =4;
+}
