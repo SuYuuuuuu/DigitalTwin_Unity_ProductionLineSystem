@@ -27,6 +27,11 @@ namespace LabProductLine.UIModule
         private void OnProductionLineSimulationPageClick(PointerEventData eventData)
         {
             SceneManager.LoadScene(2);
+            for (int i = UIManager.instance.openingUIWindows.Count-1; i >=0; i--)
+            {
+                UIManager.instance.openingUIWindows[i].SetVisible(false);
+                UIManager.instance.openingUIWindows.RemoveAt(i);
+            }
         }
 
         private void OnStatisticalAnalysisPageClick(PointerEventData eventData)

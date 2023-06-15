@@ -8,9 +8,9 @@ namespace LabProductLine.ControlModule
     /// <summary>
     ///ʵ��PLC���������ӡ��ر��Լ���ȡд��
     /// <summary>
-    public class PLCManager : MonoSingleton<PLCManager>
+    public class PLCManager : SingletonBase<PLCManager>
     {
-        public string localIpAddress = "192.168.2.1";//�˴�ip��ַΪPLC��ip��ַ
+        public string localIpAddress = "192.168.2.1";//PLCip地址
         private Plc plc;
 
 

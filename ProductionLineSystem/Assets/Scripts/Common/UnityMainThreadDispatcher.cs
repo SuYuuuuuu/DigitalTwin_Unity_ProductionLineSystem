@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using UnityEngine;
 
 namespace Common
 {
@@ -10,8 +11,20 @@ namespace Common
     public class UnityMainThreadDispatcher : MonoSingleton<UnityMainThreadDispatcher>
     {
         private static readonly Queue<Action> _executionQueue = new Queue<Action>();
+        protected override void Awake()
+        {
+            if (instance == null)
+            {
+                instance = this as UnityMainThreadDispatcher;
+                DontDestroyOnLoad(this.gameObject);
+            }
+            else
+            {
+                Destroy(this.gameObject);
+            }
 
 
+        }
 
         /// <summary>
         /// Enqueues an action to be executed in the Unity main thread.

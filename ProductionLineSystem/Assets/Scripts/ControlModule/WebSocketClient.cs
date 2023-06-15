@@ -1,7 +1,6 @@
 using BestHTTP.WebSocket;
 using Common;
 using LabProductLine.DataManagerModule;
-using LabProductLine.Protobuf;
 using LabProductLine.UIModule;
 using System;
 using System.Collections.Generic;
@@ -122,7 +121,7 @@ namespace LabProductLine.ControlModule
                     robotdata.EndEffectorPos = data.Pose?.ToArray()[0..4];
                     robotdata.JointAngles = data.Pose?.ToArray()[4..8];
                     robotdata.OperationStatus = data.LiveState == DobotConnectState.Connected ? RobotOperationStatus.working : RobotOperationStatus.waiting;
-                    robotdata.alarmState = data.AlarmState;
+                    robotdata.AlarmState = data.AlarmState;
                     robotdata.EndEffectorSuctionCup = data.EndEffectorSuctionCup.ToArray();
                 }
                 else if (dataType == 1)//非实时数据

@@ -1,4 +1,5 @@
 using LabProductLine.ControlModule;
+using System;
 using UnityEngine;
 
 namespace ConnectTest
@@ -17,6 +18,7 @@ namespace ConnectTest
                 Client.Instance.Close();
             }
         }
+
 
     }
 }

@@ -134,6 +134,7 @@ GameObject:
   - component: {fileID: 27409224}
   - component: {fileID: 27409226}
   - component: {fileID: 27409225}
+  - component: {fileID: 27409227}
   m_Layer: 5
   m_Name: Panel
   m_TagString: Untagged
@@ -200,6 +201,18 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 27409223}
   m_CullTransparentMesh: 1
+--- !u!225 &27409227
+CanvasGroup:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 27409223}
+  m_Enabled: 0
+  m_Alpha: 1
+  m_Interactable: 0
+  m_BlocksRaycasts: 1
+  m_IgnoreParentGroups: 0
 --- !u!1 &79146591
 GameObject:
   m_ObjectHideFlags: 0
@@ -910,6 +923,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   slider: {fileID: 1770491052}
+  speed: 10
 --- !u!4 &1842891827
 Transform:
   m_ObjectHideFlags: 0

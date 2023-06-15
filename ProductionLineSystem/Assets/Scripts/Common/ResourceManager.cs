@@ -8,28 +8,28 @@ using UnityEngine.Networking;
 namespace Common
 {
     /// <summary>
-    /// ��Դ������
+    /// 资源管理器
     /// </summary>
     public class ResourceManager
     {
         private static Dictionary<string, string> configDic;
         private static string configText;
-        //��̬���캯�������౻����ʱ����һ��
+        //
         static ResourceManager()
         {
             //1����ȡ�����ļ�
-            //string config = GetConfigFile("config.txt");
+            string config = GetConfigFile("config.txt");
             //GetConfigFile("config.txt");
             //2�������ļ����ֵ���<string,string>
-            //BuildMap(config);
+            BuildMap(config);
         }
 
         /// <summary>
-        /// ��ȡ�����ļ�
+        /// 从资产中获取配置文件
         /// </summary>
         /// <param name="fileName">�����ļ�����</param>
         /// <returns>�����ļ��ı�</returns>
-        public static IEnumerator GetConfigFile(string fileName, Action callback)
+        public static string GetConfigFile(string fileName)
         {
             string url;
 #if UNITY_EDITOR || UNITY_STANDALONE
@@ -38,11 +38,21 @@ namespace Common
         url = "file://" + Application.dataPath + "/Raw/"+ fileName;
 #elif UNITY_ANDROID
         url = "file://" + Application.dataPath + "!/Assets/"+ fileName;
-#else
-        url = new System.Uri(Path.Combine(Application.streamingAssetsPath,string.Format("{0}",fileName))).AbsoluteUri;
-#endif
+// #else
+//         url = new System.Uri(Path.Combine(Application.streamingAssetsPath,string.Format("{0}",fileName))).AbsoluteUri;
 
-            //WWW www = new WWW(url);�����õ�api
+#endif
+            UnityWebRequest www = UnityWebRequest.Get(url);
+            www.SendWebRequest();
+            while (true)
+            {
+                if (www.downloadHandler.isDone)
+                    return www.downloadHandler.text;
+            }
+        }
+
+        private static IEnumerator GetConfigFileOfWebGL(string url, string fileName, Action callback)
+        {
             UnityWebRequest www = UnityWebRequest.Get(url);
             yield return www.SendWebRequest();
             if (www.downloadHandler.isDone)
@@ -51,12 +61,6 @@ namespace Common
                 BuildMap(configText);
                 callback?.Invoke();
             }
-
-            // while (true)
-            // {
-            //     if (www.downloadHandler.isDone)
-            //         return www.downloadHandler.text;
-            // }
         }
 
         /// <summary>

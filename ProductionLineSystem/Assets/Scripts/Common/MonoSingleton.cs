@@ -4,21 +4,21 @@ using UnityEngine;
 namespace Common
 {
     /// <summary>
-    /// ½Å±¾µ¥ÀıÀà
+    /// Unityå•ä¾‹æ¨¡å¼
     /// </summary>
     public class MonoSingleton<T> : MonoBehaviour where T : MonoSingleton<T>
     {
-        private static T instance;
-        public static T Instance //°´Ğè²éÕÒ£¬Ö»ÔÚµÚÒ»´Îµ÷ÓÃÊ±´´½¨ÊµÀı£¬ºóĞøµ÷ÓÃÖ±½Ó·µ»Ø
+        internal static T instance;
+        public static T Instance //å•ä¾‹
         {
             get
             {
-                if (instance == null)//ÈôÊµÀıÎª¿Õ£¬ÔòÏÈÔÚ³¡¾°ÖĞ²éÕÒ
+                if (instance == null)//å¦‚æœå®ä¾‹ä¸ºnullåˆ™å¯»æ‰¾åœºæ™¯ä¸­çš„å®ä¾‹
                 {
                     instance = FindObjectOfType<T>();
-                    if (instance == null)//ÈôÊµÀıÈÔÎª¿Õ£¬ÔòËµÃ÷ÀàÃ»ÓĞ¹ÒÔØÔÚ¶ÔÏóÉÏ£¬´´½¨Ò»¸ö¶ÔÏó¹ÒÔØ¸ÃÀà
+                    if (instance == null)//å¦‚æœåœºæ™¯ä¸­ä¸å­˜åœ¨å®ä¾‹ï¼Œåˆ™æ‰‹åŠ¨åˆ›å»ºä¸€ä¸ªç‰©ä½“å¹¶æ·»åŠ ç›¸åº”ç»„ä»¶
                     {
-                        //´´½¨½Å±¾¶ÔÏó£¨Á¢¼´Ö´ĞĞAwake£©
+                        //å‘½åè‡ªå®šä¹‰
                         instance = new GameObject("Singleton Of" + typeof(T)).AddComponent<T>();
                     }
                     else
@@ -31,7 +31,7 @@ namespace Common
         }
 
 
-        protected void Awake()
+        protected virtual void Awake()
         {
             if (instance == null)
             {
@@ -40,17 +40,17 @@ namespace Common
             Init();
         }
 
-        //³õÊ¼»¯
+        //è™šåˆå§‹åŒ–æ–¹æ³•
         public virtual void Init()
         {
 
         }
         /*
-         ±¸×¢£º
-        1.ÊÊÓÃĞÔ£º³¡¾°ÖĞ´æÔÚÎ¨Ò»µÄ¶ÔÏó£¬¼´¿ÉÈÃ¸Ã¶ÔÏó¼Ì³Ğµ±Ç°Àà
-        2.ÈçºÎÊ¹ÓÃ£º
-        --¼Ì³ĞÊ±±ØĞë´«µİ×ÓÀàÀàĞÍ
-        --ÔÚÈÎÒâ½Å±¾ÉúÃüÖÜÆÚÖĞ£¬Í¨¹ı×ÓÀàÀàĞÍ·ÃÎÊInstanceÊôĞÔ
+         ï¿½ï¿½×¢ï¿½ï¿½
+        1.ï¿½ï¿½ï¿½ï¿½ï¿½Ô£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ğ´ï¿½ï¿½ï¿½Î¨Ò»ï¿½Ä¶ï¿½ï¿½ó£¬¼ï¿½ï¿½ï¿½ï¿½Ã¸Ã¶ï¿½ï¿½ï¿½Ì³Ğµï¿½Ç°ï¿½ï¿½
+        2.ï¿½ï¿½ï¿½Ê¹ï¿½Ã£ï¿½
+        --ï¿½Ì³ï¿½Ê±ï¿½ï¿½ï¿½ë´«ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+        --ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Å±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ğ£ï¿½Í¨ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Í·ï¿½ï¿½ï¿½Instanceï¿½ï¿½ï¿½ï¿½
          */
     }
 }

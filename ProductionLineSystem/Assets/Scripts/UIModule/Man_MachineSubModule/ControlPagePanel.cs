@@ -53,14 +53,17 @@ namespace LabProductLine.UIModule
                 go.GetComponent<UIEventListener>().PointClickHandler += OnControlPanelOpened;//这里没有取消订阅
                 existingRobot.Add(ID);
                 robotControlEx2Id_Dic.Add(go,ID);
-                RegisterRobotPanelShowed(ID,go.GetComponent<RobotControlEx>());//订阅机械臂信息事件
-
+                RobotControlEx ex = go.GetComponent<RobotControlEx>();
+                ex.robotData = DataManager.Instance.GetDataById<RobotData>(ID);
+                RegisterRobotPanelShowed(ID,ex);//订阅机械臂信息事件
             }
             else
             {
                 existingRobot.Add(ID);
                 robotControlEx2Id_Dic.Add(unusedObjs[0],ID);
-                RegisterRobotPanelShowed(ID,unusedObjs[0].GetComponent<RobotControlEx>());//订阅
+                RobotControlEx ex = unusedObjs[0].GetComponent<RobotControlEx>();
+                ex.robotData = DataManager.Instance.GetDataById<RobotData>(ID);
+                RegisterRobotPanelShowed(ID,ex);//订阅
                 unusedObjs.RemoveAt(0);//将第一个元素移除
 
             }

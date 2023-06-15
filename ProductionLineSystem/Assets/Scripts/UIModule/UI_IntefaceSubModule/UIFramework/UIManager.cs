@@ -9,9 +9,11 @@ namespace UGUI.Framework
         /*
          key -----窗口类名        value-----------窗口对象引用
          */
+        public List<UIWindow> openingUIWindows;//正在开启的窗户
 
         private Dictionary<string, UIWindow> uiWindowsDic;
-        public List<UIWindow> openingUIWindows;//正在开启的窗户
+
+
 
         public override void Init()
         {

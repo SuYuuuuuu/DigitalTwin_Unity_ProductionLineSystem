@@ -12,13 +12,15 @@ namespace LabProductLine.ConveyorModule
         public int index;
         private Vector3 pos;
         private ConveyorData conveyorData;
-        public ConveyorData ConveyorData
+        public ConveyorOperationStatus ConveyorDataStatus
         {
             get
             {
                 if (conveyorData == null)
                     conveyorData = DataManager.Instance.GetDataById<ConveyorData>(index);
-                return conveyorData;
+                    if(conveyorData == null)
+                        return ConveyorOperationStatus.close;
+                return conveyorData.operationStatus;
             }
         }
         //
@@ -29,7 +31,7 @@ namespace LabProductLine.ConveyorModule
 
         private void FixedUpdate()
         {
-            if (ConveyorData?.operationStatus == ConveyorOperationStatus.close) return;
+            if (ConveyorDataStatus == ConveyorOperationStatus.close) return;
             pos = rdby.position;
             rdby.position += direction * speed * Time.fixedDeltaTime;
             rdby.MovePosition(pos);

@@ -17,7 +17,7 @@ namespace LabProductLine.TransisionModule
         private void Start()
         {
             CoroutineCallback += OnResourceLoaded;
-            Coroutine task = StartCoroutine(ResourceManager.GetConfigFile("config.txt", CoroutineCallback));
+            //Coroutine task = StartCoroutine(ResourceManager.GetConfigFile("config.txt", CoroutineCallback));
         }
 
         private void OnResourceLoaded()

@@ -17,6 +17,7 @@ namespace LabProductLine.DataManagerModule
         public event Action<int, float[]> JointAnglesDataChanged;
         public event Action<int, string> NameDataChanged;
         public event Action<int, int> IdDataChanged;
+        public event Action<int,string> AlarmStateDataChanged;
         public event Action<int, float> VibrationalFrequencyDataChanged;
         public event Action<int, float> TemperatureDataChanged;
         public event Action<int, float[]> HomeParamsDataChanged;
@@ -62,7 +63,19 @@ namespace LabProductLine.DataManagerModule
         }
         public string robotDescription;//机械臂描述
 
-        public string alarmState;
+        private string alarmState;
+        public string AlarmState
+        {
+            get => alarmState;
+            set
+            {
+                if(value!=alarmState)
+                {
+                    alarmState = value;
+                    UnityMainThreadDispatcher.Instance.Enqueue(() => AlarmStateDataChanged?.Invoke(ID, value));
+                }
+            }
+        }
 
         private float[] homeParams;
         public float[] HomeParams

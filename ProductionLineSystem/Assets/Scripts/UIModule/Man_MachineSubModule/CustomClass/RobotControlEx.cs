@@ -6,8 +6,7 @@ namespace LabProductLine.UIModule
     public class RobotControlEx:MonoBehaviour
     {
         public RobotInfo robotInfo;
-
-
+        public RobotData robotData;
 
         public void OnStateChanged(int id, RobotOperationStatus value)
         {

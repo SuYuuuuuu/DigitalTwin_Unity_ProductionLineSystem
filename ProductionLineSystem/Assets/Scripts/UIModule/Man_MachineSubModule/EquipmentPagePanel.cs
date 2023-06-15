@@ -3,6 +3,7 @@ using LabProductLine.ControlModule;
 using LabProductLine.DataManagerModule;
 using System;
 using System.Collections.Generic;
+using System.Reflection;
 using TMPro;
 using UGUI.Framework;
 using UnityEngine;
@@ -89,7 +90,7 @@ namespace LabProductLine.UIModule
             foreach (GameObject key in robotDic.Keys)
             {
                 RobotData data = DataManager.Instance.GetDataById<RobotData>(robotDic[key]);
-                if (data==null || data.OperationStatus == RobotOperationStatus.waiting) continue; //直接跳过未连接的机械臂
+                if (data==null) continue; //直接跳过没有的机械臂
                 key.transform.Find("Name").GetComponent<TMP_Text>().text = data.RobotName;
                 key.transform.Find("WorkState").GetComponent<TMP_Text>().text = data.OperationStatus == RobotOperationStatus.working ? "工作中" : "已断开";
                 key.transform.Find("WorkHour").GetComponent<TMP_Text>().text = string.Format("{0:00}:{1:00}", Mathf.FloorToInt(Time.time / 60f), Mathf.FloorToInt(Time.time % 60f));
@@ -117,6 +118,7 @@ namespace LabProductLine.UIModule
             registeredRobotDataList.Clear();//清空已订阅的机械臂数据
             UIManager.Instance.GetWindow<SideNavigationPanel>().PagePanelOpened -= OnEquipmentPagePanelOpened;//这里关闭负责取消订阅
             UIManager.Instance.openingUIWindows.Remove(this);//将当前面板加入到开启队列中
+            curRobotObj =null;//初始化参数
             //UnregisterParamsBtn();
         }
 
@@ -125,7 +127,8 @@ namespace LabProductLine.UIModule
         {
             GameObject obj = eventData.pointerClick;
             UIManager.Instance.GetWindow<RobotInfoPanel>().SetVisible(true);
-            if (!robotDic.ContainsKey(obj) || curRobotObj == obj) return;
+            if (curRobotObj == obj) return; //当前机械臂ID列表不包含面板时 || 点击面板是当前面板时都直接返回
+            else if(!robotDic.ContainsKey(obj)) {InitRobotInfoText(); curRobotObj = null; return;}
             RobotData data = DataManager.Instance.GetDataById<RobotData>(robotDic[obj]);
             UpdateRobotInfo(data);//更新机械臂数据
             RegisterRobotDataEvent(data);
@@ -144,6 +147,7 @@ namespace LabProductLine.UIModule
         {
             data.IdDataChanged += OnRobotIdDataChanged;
             data.NameDataChanged += OnRobotNameDataChanged;
+            data.AlarmStateDataChanged += OnAlarmStateDataChanged;
             data.EndEffectorPosDataChanged += OnEndEffectorPosDataChanged;
             data.JointAnglesDataChanged += OnJointAnglesDataChanged;
             data.HomeParamsDataChanged += OnHomeParamsDataChanged;
@@ -157,11 +161,14 @@ namespace LabProductLine.UIModule
             data.PTPCommonParamsDataChanged += OnPTPCommonParamsDataChanged;
         }
 
+
+
         //负责注销属性变化通知事件
         private void UnregisterRobotDataEvent(RobotData data)
         {
             data.IdDataChanged -= OnRobotIdDataChanged;
             data.NameDataChanged -= OnRobotNameDataChanged;
+             data.AlarmStateDataChanged -= OnAlarmStateDataChanged;
             data.EndEffectorPosDataChanged -= OnEndEffectorPosDataChanged;
             data.JointAnglesDataChanged -= OnJointAnglesDataChanged;
             data.HomeParamsDataChanged -= OnHomeParamsDataChanged;
@@ -181,7 +188,7 @@ namespace LabProductLine.UIModule
 
             OnRobotIdDataChanged(-1, data.RobotID);
             OnRobotNameDataChanged(-1, data.RobotName);
-            robotInfo.robotAlarmState.text = "无";
+            OnAlarmStateDataChanged(-1,data.AlarmState);
             OnJointAnglesDataChanged(-1, data.JointAngles);
             OnEndEffectorPosDataChanged(-1, data.EndEffectorPos);
             OnHomeParamsDataChanged(-1, data.HomeParams);
@@ -251,6 +258,32 @@ namespace LabProductLine.UIModule
             }
         }
 
+
+        ///用于初始化面板信息
+        private void InitRobotInfoText()
+        {
+            robotInfo.robotID.text = "XXX";
+            robotInfo.robotName.text = "XXX";
+            robotInfo.robotWorkState.text = "XXX";
+            robotInfo.robotAlarmState.text = "XXX";
+            robotInfo.robotSuctionCupState.text = "XXX";
+            robotInfo.robotPos_JointAngles.text = "XXX";
+            robotInfo.robotPos_EndPos.text = "XXX";
+            robotInfo.robotHomeParams.text = "XXX";
+            robotInfo.robotPtpCooParams.text = "XXX";
+            robotInfo.robotPtpJointParams.text = "XXX";
+            robotInfo.robotPtpCommonParams.text = "XXX";
+            robotInfo.robotJogCooParams.text = "XXX";
+            robotInfo.robotJogJointParams.text = "XXX";
+            robotInfo.robotJogCommonParams.text = "XXX";
+        }
+         private void OnAlarmStateDataChanged(int id, string value)
+        {
+            if(value == string.Empty)
+                robotInfo.robotAlarmState.text = "无";
+            else
+                robotInfo.robotAlarmState.text = value;
+        }
 
         private void OnRobotIdDataChanged(int id, int value)
         {

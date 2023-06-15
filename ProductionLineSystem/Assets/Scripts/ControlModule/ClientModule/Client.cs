@@ -1,6 +1,5 @@
 ﻿using Common;
 using LabProductLine.DataManagerModule;
-using LabProductLine.Protobuf;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -56,7 +55,6 @@ namespace LabProductLine.ControlModule
                 if (socket.Connected)
                 {
                     Debug.Log("客户端开启成功！");
-                    //StartAllTimer();//开启定时器
                     ReceiveData(socket);   //接收数据
                 }
             }
@@ -130,7 +128,7 @@ namespace LabProductLine.ControlModule
                     robotdata.EndEffectorPos = data.Pose?.ToArray()[0..4];
                     robotdata.JointAngles = data.Pose?.ToArray()[4..8];
                     robotdata.OperationStatus = data.LiveState == DobotConnectState.Connected ? RobotOperationStatus.working : RobotOperationStatus.waiting;
-                    robotdata.alarmState = data.AlarmState;
+                    robotdata.AlarmState = data.AlarmState;
                     robotdata.EndEffectorSuctionCup = data.EndEffectorSuctionCup.ToArray();
                 }
                 else if (dataType == 1)//非实时数据
@@ -169,6 +167,11 @@ namespace LabProductLine.ControlModule
                     sensorData.detectStatus = data.IsActived;
                     Debug.Log("传感器ID为：" + sensorData.ID.ToString() + sensorData.detectStatus);
                 }
+                else if(dataType==5) 
+                {
+                    int id = BitConverter.ToInt32(bufferList.ToArray()[2..(2 + packageLen)]);
+                    DataManager.Instance.GetDataById<RobotData>(id).OperationStatus = RobotOperationStatus.waiting;
+                }
                 // long clientDateTime = long.Parse(data.DateTime);
                 // double timeSpan = (DateTime.Now.Ticks - clientDateTime) / (double)TimeSpan.TicksPerMillisecond;
                 // Debug.Log("当前时间为：" +DateTime.Now.Ticks + "发送时间为："+ clientDateTime + "时间差为:" +   timeSpan + "ms");
@@ -180,128 +183,128 @@ namespace LabProductLine.ControlModule
 
 
         /*----------------发送数据-------------------------*/
-        public void SendData(string msg, Socket client)
-        {
-            if (msg == null || client == null) return;
-            try
-            {
-                byte[] bytes = Encoding.GetEncoding("GBK").GetBytes(msg);
-                byte[] res = new byte[bytes.Length + 4];//为新建字节数组添加数据头
-                res[0] = 0xAA;//包头
-                res[1] = 0;//数据类型
-                res[2] = (byte)bytes.Length;//负载帧长
-                Buffer.BlockCopy(bytes, 0, res, 3, bytes.Length);
-                res[res.Length - 1] = GetByteOfPayloadCheckSum_Send(bytes);
-                client.BeginSend(res, 0, res.Length, SocketFlags.None, EndSendData, client);
-            }
-            catch (Exception ex)
-            {
-                Debug.LogException(ex);
-            }
+        // public void SendData(string msg, Socket client)
+        // {
+        //     if (msg == null || client == null) return;
+        //     try
+        //     {
+        //         byte[] bytes = Encoding.GetEncoding("GBK").GetBytes(msg);
+        //         byte[] res = new byte[bytes.Length + 4];//为新建字节数组添加数据头
+        //         res[0] = 0xAA;//包头
+        //         res[1] = 0;//数据类型
+        //         res[2] = (byte)bytes.Length;//负载帧长
+        //         Buffer.BlockCopy(bytes, 0, res, 3, bytes.Length);
+        //         res[res.Length - 1] = GetByteOfPayloadCheckSum_Send(bytes);
+        //         client.BeginSend(res, 0, res.Length, SocketFlags.None, EndSendData, client);
+        //     }
+        //     catch (Exception ex)
+        //     {
+        //         Debug.LogException(ex);
+        //     }
 
-        }//发送数据（字符串类型）
-        public void SendData(UInt32[] msg, Socket client)
-        {
-            if (msg == null || client == null) return;
-            try
-            {
-                byte[] bytes = new byte[msg.Length * 4 + 4]; //包含包头、数据类型、负载帧长、负载、校验位
-                bytes[0] = 0xAA;
-                bytes[1] = 1;
-                bytes[2] = (byte)bytes.Length;
-                int count = 3;
-                foreach (var item in msg)
-                {
-                    Buffer.BlockCopy(BitConverter.GetBytes(item), 0, bytes, count, 4);//将得到的每个uint转换的byte[]添加到原有的字节数组上
-                    count += 4;
-                }
-                bytes[bytes.Length - 1] = GetByteOfPayloadCheckSum_Send(bytes[3..(bytes.Length - 1)]);
-                client.BeginSend(bytes, 0, bytes.Length, SocketFlags.None, EndSendData, client);
-            }
-            catch (Exception ex)
-            {
-                Debug.LogException(ex);
-            }
+        // }//发送数据（字符串类型）
+        // public void SendData(UInt32[] msg, Socket client)
+        // {
+        //     if (msg == null || client == null) return;
+        //     try
+        //     {
+        //         byte[] bytes = new byte[msg.Length * 4 + 4]; //包含包头、数据类型、负载帧长、负载、校验位
+        //         bytes[0] = 0xAA;
+        //         bytes[1] = 1;
+        //         bytes[2] = (byte)bytes.Length;
+        //         int count = 3;
+        //         foreach (var item in msg)
+        //         {
+        //             Buffer.BlockCopy(BitConverter.GetBytes(item), 0, bytes, count, 4);//将得到的每个uint转换的byte[]添加到原有的字节数组上
+        //             count += 4;
+        //         }
+        //         bytes[bytes.Length - 1] = GetByteOfPayloadCheckSum_Send(bytes[3..(bytes.Length - 1)]);
+        //         client.BeginSend(bytes, 0, bytes.Length, SocketFlags.None, EndSendData, client);
+        //     }
+        //     catch (Exception ex)
+        //     {
+        //         Debug.LogException(ex);
+        //     }
 
-        }//发送数据（uint类型）
-        public void SendData(bool[] msg, Socket client, int signalType)//signalType为发送信号类型，1为输入，2为输出，0为其他
-        {
-            if (msg == null || client == null) return;
-            try
-            {
-                byte[] bytes = Array.ConvertAll(msg, value => value ? (byte)1 : (byte)0);//负载
-                byte[] res = new byte[bytes.Length + 5];//为新建字节数组添加数据头
-                res[0] = 0xAA;//包头
-                res[1] = 2;//数据类型
-                res[2] = (byte)(bytes.Length + 1);//负载帧长
-                res[3] = (byte)signalType;//信号类型
-                Buffer.BlockCopy(bytes, 0, res, 4, bytes.Length);
-                res[res.Length - 1] = GetByteOfPayloadCheckSum_Send(res[3..(res.Length - 1)]);//校验位
+        // }//发送数据（uint类型）
+        // public void SendData(bool[] msg, Socket client, int signalType)//signalType为发送信号类型，1为输入，2为输出，0为其他
+        // {
+        //     if (msg == null || client == null) return;
+        //     try
+        //     {
+        //         byte[] bytes = Array.ConvertAll(msg, value => value ? (byte)1 : (byte)0);//负载
+        //         byte[] res = new byte[bytes.Length + 5];//为新建字节数组添加数据头
+        //         res[0] = 0xAA;//包头
+        //         res[1] = 2;//数据类型
+        //         res[2] = (byte)(bytes.Length + 1);//负载帧长
+        //         res[3] = (byte)signalType;//信号类型
+        //         Buffer.BlockCopy(bytes, 0, res, 4, bytes.Length);
+        //         res[res.Length - 1] = GetByteOfPayloadCheckSum_Send(res[3..(res.Length - 1)]);//校验位
 
-                client.BeginSend(res, 0, res.Length, SocketFlags.None, EndSendData, client);
-            }
-            catch (Exception ex)
-            {
-                Debug.LogException(ex);
-            }
-        }
-        public void SendData(float[] msg, Socket client, int robotType)//robotType为机械臂型号标识，共有1、2、3、4；若发送其他浮点数据该位字节为0即可
-        {
+        //         client.BeginSend(res, 0, res.Length, SocketFlags.None, EndSendData, client);
+        //     }
+        //     catch (Exception ex)
+        //     {
+        //         Debug.LogException(ex);
+        //     }
+        // }
+        // public void SendData(float[] msg, Socket client, int robotType)//robotType为机械臂型号标识，共有1、2、3、4；若发送其他浮点数据该位字节为0即可
+        // {
 
-            if (msg == null || client == null) return;
-            try
-            {
-                byte[] bytes = new byte[msg.Length * 4 + 5];//负载帧第一位为机械臂型号，其余为浮点数;总长为包头(1)+负载帧长(1)+负载帧(1+msg.Length*4)+校验位(1)
-                bytes[0] = 0xAA;
-                bytes[1] = 3;//数据类型
-                bytes[2] = (byte)((msg.Length * 4) + 1);
-                bytes[3] = (byte)robotType;
-                int count = 4;
-                foreach (var item in msg)
-                {
-                    Buffer.BlockCopy(BitConverter.GetBytes(item), 0, bytes, count, 4);//将得到的每个float转换的byte[]添加到原有的字节数组上
-                    count += 4;
-                }
-                bytes[bytes.Length - 1] = GetByteOfPayloadCheckSum_Send(bytes[3..(bytes.Length - 1)]);//最后一位为校验位
-                client.BeginSend(bytes, 0, bytes.Length, SocketFlags.None, EndSendData, client);//(这里开始发送数据)
-            }
-            catch (Exception ex)
-            {
-                Debug.LogException(ex);
-            }
+        //     if (msg == null || client == null) return;
+        //     try
+        //     {
+        //         byte[] bytes = new byte[msg.Length * 4 + 5];//负载帧第一位为机械臂型号，其余为浮点数;总长为包头(1)+负载帧长(1)+负载帧(1+msg.Length*4)+校验位(1)
+        //         bytes[0] = 0xAA;
+        //         bytes[1] = 3;//数据类型
+        //         bytes[2] = (byte)((msg.Length * 4) + 1);
+        //         bytes[3] = (byte)robotType;
+        //         int count = 4;
+        //         foreach (var item in msg)
+        //         {
+        //             Buffer.BlockCopy(BitConverter.GetBytes(item), 0, bytes, count, 4);//将得到的每个float转换的byte[]添加到原有的字节数组上
+        //             count += 4;
+        //         }
+        //         bytes[bytes.Length - 1] = GetByteOfPayloadCheckSum_Send(bytes[3..(bytes.Length - 1)]);//最后一位为校验位
+        //         client.BeginSend(bytes, 0, bytes.Length, SocketFlags.None, EndSendData, client);//(这里开始发送数据)
+        //     }
+        //     catch (Exception ex)
+        //     {
+        //         Debug.LogException(ex);
+        //     }
 
-        }//发送数据（浮点数类型）
+        // }//发送数据（浮点数类型）
 
-        private void EndSendData(IAsyncResult ar)
-        {
-            Socket client = (Socket)ar.AsyncState;
-            client.EndSend(ar);
-        }
+        // private void EndSendData(IAsyncResult ar)
+        // {
+        //     Socket client = (Socket)ar.AsyncState;
+        //     client.EndSend(ar);
+        // }
 
-        public static byte GetByteOfPayloadCheckSum_Receive(params byte[] bytes)
-        {
-            byte res = 0;
-            if (bytes.Length > 0)
-            {
-                for (int i = 0; i < bytes.Length; i++)
-                {
-                    res += bytes[i];
-                }
-            }
-            return Convert.ToByte(res % 256);
-        }
-        public static byte GetByteOfPayloadCheckSum_Send(params byte[] bytes)
-        {
-            byte res = 0;
-            if (bytes.Length > 0)
-            {
-                for (int i = 0; i < bytes.Length; i++)
-                {
-                    res += bytes[i];
-                }
-            }
-            return Convert.ToByte(256 - res % 256);
+        // public static byte GetByteOfPayloadCheckSum_Receive(params byte[] bytes)
+        // {
+        //     byte res = 0;
+        //     if (bytes.Length > 0)
+        //     {
+        //         for (int i = 0; i < bytes.Length; i++)
+        //         {
+        //             res += bytes[i];
+        //         }
+        //     }
+        //     return Convert.ToByte(res % 256);
+        // }
+        // public static byte GetByteOfPayloadCheckSum_Send(params byte[] bytes)
+        // {
+        //     byte res = 0;
+        //     if (bytes.Length > 0)
+        //     {
+        //         for (int i = 0; i < bytes.Length; i++)
+        //         {
+        //             res += bytes[i];
+        //         }
+        //     }
+        //     return Convert.ToByte(256 - res % 256);
 
-        }
+        // }
     }
 }
