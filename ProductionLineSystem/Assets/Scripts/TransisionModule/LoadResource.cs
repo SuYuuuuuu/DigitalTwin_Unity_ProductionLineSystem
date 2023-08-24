@@ -34,8 +34,7 @@ namespace LabProductLine.TransisionModule
 
         private IEnumerator LoadScene()
         {
-            yield return new WaitForSeconds(2f);
-            SceneManager.LoadSceneAsync(1);
+            yield return SceneManager.LoadSceneAsync(1);
         }
 
     }

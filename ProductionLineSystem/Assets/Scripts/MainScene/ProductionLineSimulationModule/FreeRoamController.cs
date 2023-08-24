@@ -4,8 +4,8 @@ namespace LabProductLine.ProductionLineSimulationModule
 {
     public class FreeRoamController : MonoBehaviour
     {
-        public float moveSpeed = 5f; // 相机移动速度
-        public float rotationSpeed = 100f; // 相机旋转速度
+        public float moveSpeed = 5f; // 绉诲姩閫熷害
+        public float rotationSpeed = 100f; // 鏃嬭浆閫熷害
         private float horizontal;
         private float vertical;
         private float up;
@@ -13,17 +13,38 @@ namespace LabProductLine.ProductionLineSimulationModule
         private float rotateY;
         private float rotX;
         private float rotY;
-        private Vector3 initialPosition; // 相机初始位置
+        private Vector3 initialPosition; // 鍒濆浣嶇疆
+        private Quaternion initialRotation; //鍒濆鏃嬭浆
 
+        private RaycastHit hitInfo;
         private void Start()
         {
             initialPosition = transform.position;
-            //Cursor.lockState = CursorLockMode.Locked;
+            initialRotation = transform.rotation;
         }
 
+        private void OnEnable() {
+            Cursor.lockState = CursorLockMode.Locked;
+        }
         private void Update()
         {
-            // 相机移动
+
+            if(Input.GetKeyDown(KeyCode.Escape))
+                Cursor.lockState = CursorLockMode.None;
+            if(Input.GetMouseButtonDown(0))
+            {
+                Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+                if(Physics.Raycast(ray,out hitInfo))
+                {
+                    if(!hitInfo.transform.CompareTag("UI Button"))
+                        Cursor.lockState = CursorLockMode.Locked;
+                }
+
+            }
+
+            // 鑾峰彇閿洏杈撳叆
+            if(Cursor.lockState == CursorLockMode.None)
+                return;
             horizontal = Input.GetAxis("Horizontal");
             vertical = Input.GetAxis("Vertical");
             up = Input.GetAxis("Jump");
@@ -31,7 +52,7 @@ namespace LabProductLine.ProductionLineSimulationModule
             Vector3 moveDirection = new Vector3(horizontal, up, vertical);
             transform.Translate(moveDirection * moveSpeed * Time.deltaTime);
 
-            // 相机旋转
+            // 鑾峰彇鏃嬭浆杈撳叆
             rotateX = Input.GetAxis("Mouse X");
             rotateY = Input.GetAxis("Mouse Y");
 
@@ -39,7 +60,7 @@ namespace LabProductLine.ProductionLineSimulationModule
             transform.Rotate(Vector3.left, rotateY * rotationSpeed * Time.deltaTime);
 
 
-            // 重置相机位置和旋转
+            // 澶嶄綅
             if (Input.GetKeyDown(KeyCode.R))
             {
                 ResetCamPos();
@@ -62,7 +83,7 @@ namespace LabProductLine.ProductionLineSimulationModule
         public void ResetCamPos()
         {
             transform.position = initialPosition;
-            transform.rotation = Quaternion.identity;
+            transform.rotation = initialRotation;
         }
     }
 }

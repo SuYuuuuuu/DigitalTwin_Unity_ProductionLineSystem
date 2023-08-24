@@ -6,6 +6,8 @@ TagManager:
   tags:
   - grappable
   - Ground
+  - Manager
+  - UI Button
   layers:
   - Default
   - TransparentFX
