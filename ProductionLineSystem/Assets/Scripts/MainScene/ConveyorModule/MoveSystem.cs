@@ -31,7 +31,7 @@ namespace LabProductLine.ConveyorModule
 
         private void FixedUpdate()
         {
-            if (ConveyorDataStatus == ConveyorOperationStatus.close) return;
+            //if (ConveyorDataStatus == ConveyorOperationStatus.close) return;
             pos = rdby.position;
             rdby.position += direction * speed * Time.fixedDeltaTime;
             rdby.MovePosition(pos);

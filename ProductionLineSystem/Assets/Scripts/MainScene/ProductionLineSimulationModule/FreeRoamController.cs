@@ -1,4 +1,8 @@
+using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.EventSystems;
+using UnityEngine.UI;
 
 namespace LabProductLine.ProductionLineSimulationModule
 {
@@ -17,33 +21,40 @@ namespace LabProductLine.ProductionLineSimulationModule
         private Quaternion initialRotation; //初始旋转
 
         private RaycastHit hitInfo;
+
+        private bool isCursorLocked = true;
+
         private void Start()
         {
             initialPosition = transform.position;
             initialRotation = transform.rotation;
         }
 
-        private void OnEnable() {
+        private void OnEnable()
+        {
             Cursor.lockState = CursorLockMode.Locked;
         }
         private void Update()
         {
 
-            if(Input.GetKeyDown(KeyCode.Escape))
-                Cursor.lockState = CursorLockMode.None;
-            if(Input.GetMouseButtonDown(0))
+            if (Input.GetKeyDown(KeyCode.Escape))
             {
-                Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
-                if(Physics.Raycast(ray,out hitInfo))
-                {
-                    if(!hitInfo.transform.CompareTag("UI Button"))
-                        Cursor.lockState = CursorLockMode.Locked;
-                }
-
+                Cursor.lockState = isCursorLocked ? CursorLockMode.None : CursorLockMode.Locked;
+                isCursorLocked = !isCursorLocked;
             }
 
+            // if (Input.GetMouseButtonDown(0))
+            // {
+            //     // Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+            //     // if(Physics.Raycast(ray,out hitInfo))
+            //     // {
+            //     //     if(!hitInfo.transform.CompareTag("UI Button"))
+            //     //         Cursor.lockState = CursorLockMode.Locked;
+            //     // }
+            // }
+
             // 获取键盘输入
-            if(Cursor.lockState == CursorLockMode.None)
+            if (Cursor.lockState == CursorLockMode.None)
                 return;
             horizontal = Input.GetAxis("Horizontal");
             vertical = Input.GetAxis("Vertical");
@@ -82,9 +93,11 @@ namespace LabProductLine.ProductionLineSimulationModule
 
         public void ResetCamPos()
         {
+            if (this.enabled == false) return;
             transform.position = initialPosition;
             transform.rotation = initialRotation;
         }
+
     }
 }
 

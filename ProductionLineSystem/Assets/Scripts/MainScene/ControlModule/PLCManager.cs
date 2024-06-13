@@ -32,12 +32,12 @@ namespace LabProductLine.ControlModule
 
                 if (plc.IsConnected)
                 {
-                    Debug.Log("PLC�ɹ�����");
+                    Debug.Log("PLC已连接!");
                 }
 
                 else
                 {
-                    Debug.Log("PLC����ʧ��");
+                    Debug.Log("PLC连接失败,请重试!");
                 }
             }
 
